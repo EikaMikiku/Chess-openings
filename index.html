@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="js/openings.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+	<script src="js/chessboard-0.3.0.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="css/chessboard-0.3.0.min.css">
+	<title>Chess openings</title>
+	<style type="text/css">
+		body{
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+		}
+		#board {
+			width: 300px;
+			position: fixed;
+			right: 0;
+			top: 0;
+			cursor: pointer;
+		}
+		.highlight {
+			font-weight: bold;
+			background-color: lightgray;
+		}
+		#list div {
+			cursor: pointer;
+			font-family: monospace;
+		}
+	</style>
+</head>
+<body>
+<div id="board"></div>
+<div id="list">
+	
+</div>
+</body>
+<script type="text/javascript">
+var list = document.getElementById("list");
+var board = ChessBoard("board", {
+	"position": "start",
+	"showNotation": false
+});
+
+for(fen in window.CHESS_OPENINGS) {
+	var op = document.createElement("div");
+	op.textContent = window.CHESS_OPENINGS[fen].eco + " " + window.CHESS_OPENINGS[fen].name;
+	op.setAttribute("fen", fen);
+	var turn = fen.indexOf(" w ") === -1 ? "b" : "w";
+	op.setAttribute("turn", turn);
+	op.addEventListener("mousedown", function(e) {
+		var old = $(".highlight")[0];
+		if(old) {
+			old.className = "";
+		}
+		this.className = "highlight";
+		var fen = this.getAttribute("fen") + " - 0 1";
+		board.position(fen, false);
+		if(this.getAttribute("turn") === "w") {
+			board.orientation("white");
+		} else {
+			board.orientation("black");
+		}
+	});
+
+	list.appendChild(op);
+}
+
+document.addEventListener("keypress", function(e) {
+	if(e.key === "f") {
+		board.flip();
+	}
+});
+document.getElementById("board").addEventListener("click", function(e) {
+	var turn = "w";
+	var h = $(".highlight")[0];
+	if(h) {
+		turn = h.getAttribute("turn");
+	}
+	window.open("https://lichess.org/analysis/" + board.fen() + "_" + turn, "_blank");
+});
+</script>
+</html>
