@@ -58,12 +58,7 @@ for(fen in window.CHESS_OPENINGS) {
 		}
 		this.className = "highlight";
 		var fen = this.getAttribute("fen") + " - 0 1";
-		board.position(fen, false);
-		if(this.getAttribute("turn") === "w") {
-			board.orientation("white");
-		} else {
-			board.orientation("black");
-		}
+		board.position(fen);
 	});
 
 	list.appendChild(op);
