@@ -12,17 +12,30 @@
 		#board {
 			width: 300px;
 			position: fixed;
-			right: 0;
+			right: 10px;
 			top: 50px;
 			cursor: pointer;
+		}
+		#board:hover {
+			box-shadow: 0px 0px 10px 1px gray;
 		}
 		.highlight {
 			font-weight: bold;
 			background-color: lightgray;
 		}
-		#list div {
+		#list * {
 			cursor: pointer;
 			font-family: monospace;
+			display: block;
+			float: left;
+			clear: left;
+			text-decoration: none;
+			color: black;
+			padding-left: 4px;
+			padding-right: 4px;
+		}
+		#list div:hover {
+			background-color: #dedede;
 		}
 	</style>
 </head>
@@ -41,11 +54,13 @@ var board = ChessBoard("board", {
 
 for(fen in window.CHESS_OPENINGS) {
 	var op = document.createElement("div");
-	op.textContent = window.CHESS_OPENINGS[fen].eco + " " + window.CHESS_OPENINGS[fen].name;
+	var openingName = window.CHESS_OPENINGS[fen].eco + " " + window.CHESS_OPENINGS[fen].name;
+	op.id = openingName;
+	op.textContent = openingName;
 	op.setAttribute("fen", fen);
-	var turn = fen.indexOf(" w ") === -1 ? "b" : "w";
-	op.setAttribute("turn", turn);
-	op.addEventListener("mousedown", function(e) {
+	op.setAttribute("turn", fen.indexOf(" w ") === -1 ? "b" : "w");
+
+	op.addEventListener("click", function(e) {
 		var old = $(".highlight")[0];
 		if(old) {
 			old.className = "";
@@ -53,6 +68,7 @@ for(fen in window.CHESS_OPENINGS) {
 		this.className = "highlight";
 		var fen = this.getAttribute("fen") + " - 0 1";
 		board.position(fen);
+		history.pushState(null, null, "#" + this.id);
 	});
 
 	list.appendChild(op);
@@ -63,6 +79,7 @@ document.addEventListener("keypress", function(e) {
 		board.flip();
 	}
 });
+
 document.getElementById("board").addEventListener("click", function(e) {
 	var turn = "w";
 	var h = $(".highlight")[0];
@@ -70,6 +87,13 @@ document.getElementById("board").addEventListener("click", function(e) {
 		turn = h.getAttribute("turn");
 	}
 	window.open("https://lichess.org/analysis/" + board.fen() + "_" + turn, "_blank");
+});
+
+document.addEventListener("DOMContentLoaded", function(e) {
+	if(window.location.hash) {
+		var op = document.getElementById(window.location.hash.substring(1));
+		op.click();
+	}
 });
 </script>
 </html>
