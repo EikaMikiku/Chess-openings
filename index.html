@@ -55,7 +55,7 @@ var board = ChessBoard("board", {
 for(fen in window.CHESS_OPENINGS) {
 	var op = document.createElement("div");
 	var openingName = window.CHESS_OPENINGS[fen].eco + " " + window.CHESS_OPENINGS[fen].name;
-	op.id = openingName;
+	op.id = openingName.replace(/\s/g, "_");
 	op.textContent = openingName;
 	op.setAttribute("fen", fen);
 	op.setAttribute("turn", fen.indexOf(" w ") === -1 ? "b" : "w");
