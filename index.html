@@ -24,8 +24,8 @@
 		#filter {
 			width: 300px;
 			position: fixed;
-			bottom: 10px;
-			right: 10px;
+			top: 10px;
+			right: 320px;
 		}
 		.highlight {
 			font-weight: bold;
@@ -47,18 +47,18 @@
 		}
 		#help {
 			position: fixed;
-			bottom: 40px;
-			right: 10px;
+			top: 40px;
+			right: 320px;
 			width: 300px;
 			font-family: monospace;
 		}
 		#explorer {
 			width: 300px;
-			height: 123px;
 			right: 10px;
 			position: fixed;
 			top: 320px;
 			border: 1px solid;
+			display: none;
 		}
 		#explorer div {
 			text-align: center;
@@ -148,7 +148,7 @@
 	<br>
 	• <b>&darr;</b> - Select next opening
 	<br>
-	• Click on the board for lichess analysis
+	• Click on the board for Lichess analysis
 </div>
 <div id="explorer">
 	<label id="master-explorer-setting-container">
@@ -160,6 +160,81 @@
 		<div class="explorer-bar"></div>
 	</div>
 	<div id="explorer-moves">
+		<div class="explorer-move">
+			<div class="explorer-move-name"></div>
+			<div class="explorer-move-use"></div>
+			<div class="explorer-bar"></div>
+		</div>
+		<div class="explorer-move">
+			<div class="explorer-move-name"></div>
+			<div class="explorer-move-use"></div>
+			<div class="explorer-bar"></div>
+		</div>
+		<div class="explorer-move">
+			<div class="explorer-move-name"></div>
+			<div class="explorer-move-use"></div>
+			<div class="explorer-bar"></div>
+		</div>
+		<div class="explorer-move">
+			<div class="explorer-move-name"></div>
+			<div class="explorer-move-use"></div>
+			<div class="explorer-bar"></div>
+		</div>
+		<div class="explorer-move">
+			<div class="explorer-move-name"></div>
+			<div class="explorer-move-use"></div>
+			<div class="explorer-bar"></div>
+		</div>
+		<div class="explorer-move">
+			<div class="explorer-move-name"></div>
+			<div class="explorer-move-use"></div>
+			<div class="explorer-bar"></div>
+		</div>
+		<div class="explorer-move">
+			<div class="explorer-move-name"></div>
+			<div class="explorer-move-use"></div>
+			<div class="explorer-bar"></div>
+		</div>
+		<div class="explorer-move">
+			<div class="explorer-move-name"></div>
+			<div class="explorer-move-use"></div>
+			<div class="explorer-bar"></div>
+		</div>
+		<div class="explorer-move">
+			<div class="explorer-move-name"></div>
+			<div class="explorer-move-use"></div>
+			<div class="explorer-bar"></div>
+		</div>
+		<div class="explorer-move">
+			<div class="explorer-move-name"></div>
+			<div class="explorer-move-use"></div>
+			<div class="explorer-bar"></div>
+		</div>
+		<div class="explorer-move">
+			<div class="explorer-move-name"></div>
+			<div class="explorer-move-use"></div>
+			<div class="explorer-bar"></div>
+		</div>
+		<div class="explorer-move">
+			<div class="explorer-move-name"></div>
+			<div class="explorer-move-use"></div>
+			<div class="explorer-bar"></div>
+		</div>
+		<div class="explorer-move">
+			<div class="explorer-move-name"></div>
+			<div class="explorer-move-use"></div>
+			<div class="explorer-bar"></div>
+		</div>
+		<div class="explorer-move">
+			<div class="explorer-move-name"></div>
+			<div class="explorer-move-use"></div>
+			<div class="explorer-bar"></div>
+		</div>
+		<div class="explorer-move">
+			<div class="explorer-move-name"></div>
+			<div class="explorer-move-use"></div>
+			<div class="explorer-bar"></div>
+		</div>
 		<div class="explorer-move">
 			<div class="explorer-move-name"></div>
 			<div class="explorer-move-use"></div>
@@ -199,6 +274,7 @@ var lichessExplorerTimerDelay = 100;
 var canUseLichessExplorer = true;
 
 var explorerCurrent = document.getElementById("explorer-current");
+var explorerContainer = document.getElementById("explorer");
 var explorerMoves = document.getElementById("explorer-moves");
 var explorerMastersCheckbox = document.getElementById("master-explorer-setting");
 
@@ -217,6 +293,7 @@ for(fen in window.CHESS_OPENINGS) {
 	op.setAttribute("turn", fen.indexOf(" w ") === -1 ? "b" : "w");
 
 	op.addEventListener("click", function(e) {
+		explorerContainer.style.display = "block";
 		var old = $(".highlight")[0];
 		if(old) {
 			old.className = "";
@@ -236,7 +313,13 @@ function processLichessExplorerData(data) {
 	var currentGamesDiv = explorerCurrent.getElementsByClassName("explorer-current-games")[0];
 	var currentBarDiv = explorerCurrent.getElementsByClassName("explorer-bar")[0];
 	var currentTotalGames = data.white + data.draws + data.black;
-	currentGamesDiv.textContent = currentTotalGames === 0 ? "No games found" : currentTotalGames;
+	if(currentTotalGames === 0) {
+		currentGamesDiv.textContent = "No games found";
+		explorerCurrent.style.border = "none";
+	} else {
+ 		currentGamesDiv.textContent = currentTotalGames;
+ 		explorerCurrent.style.border = "";
+	}
 	removeLichessExplorerBar(currentBarDiv);
 	createLichessExplorerBar(currentBarDiv, data.white, data.draws, data.black, currentTotalGames);
 	//Moves
@@ -315,9 +398,9 @@ function createLichessExplorerBar(container, white, draw, black, total) {
 function getLichessExplorerData(fen, master) {
 	return new Promise(function(resolve, reject) {
 		var xhr = new XMLHttpRequest();
-		var url = "https://explorer.lichess.ovh/" + (master ? "master" : "lichess") + 
+		var url = "https://explorer.lichess.ovh/" + (master ? "master" : "lichess") +
 			"?variant=standard" +
-			"&moves=5" +
+			"&moves=20" +
 			"&fen=" + fen +
 			"&speeds[]=blitz&speeds[]=classical&speeds[]=bullet&speeds[]=rapid" +
 			"&ratings[]=2000&ratings[]=2200&ratings[]=2500&ratings[]=1800&ratings[]=1600";
