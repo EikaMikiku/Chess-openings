@@ -2,6 +2,7 @@
 <html>
 <head>
 	<script src="js/openings.js"></script>
+	<script src="js/chess.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
 	<script src="js/chessboard-0.3.0.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="css/chessboard-0.3.0.min.css">
@@ -136,6 +137,16 @@
 			margin: 0;
 			vertical-align: middle;
 		}
+		#pgn {
+			font-weight: bold;
+			position: fixed;
+			top: 110px;
+			right: 320px;
+			width: 300px;
+		}
+		#pgn:before {
+			content: "PGN: ";
+		}
 	</style>
 </head>
 <body>
@@ -150,6 +161,7 @@
 	<br>
 	• Click on the board for Lichess analysis
 </div>
+<div id="pgn"></div>
 <div id="explorer">
 	<label id="master-explorer-setting-container">
 		Masters
@@ -265,44 +277,54 @@
 <div id="list"></div>
 </body>
 <script type="text/javascript">
-var arrowTimer = null;
-var arrowTimerDelay = 50;
-var canUseArrows = true;
+let arrowTimer = null;
+let arrowTimerDelay = 50;
+let canUseArrows = true;
 
-var lichessExplorerTimer = null;
-var lichessExplorerTimerDelay = 100;
-var canUseLichessExplorer = true;
+let lichessExplorerTimer = null;
+let lichessExplorerTimerDelay = 100;
+let canUseLichessExplorer = true;
 
-var explorerCurrent = document.getElementById("explorer-current");
-var explorerContainer = document.getElementById("explorer");
-var explorerMoves = document.getElementById("explorer-moves");
-var explorerMastersCheckbox = document.getElementById("master-explorer-setting");
+let explorerCurrent = document.getElementById("explorer-current");
+let explorerContainer = document.getElementById("explorer");
+let explorerMoves = document.getElementById("explorer-moves");
+let explorerMastersCheckbox = document.getElementById("master-explorer-setting");
 
-var list = document.getElementById("list");
-var board = ChessBoard("board", {
+let pgnDiv = document.getElementById("pgn");
+
+let list = document.getElementById("list");
+let board = ChessBoard("board", {
 	"position": "start",
 	"showNotation": false
 });
 
-for(fen in window.CHESS_OPENINGS) {
-	var op = document.createElement("div");
-	var openingName = window.CHESS_OPENINGS[fen].eco + " " + window.CHESS_OPENINGS[fen].name;
+for(let i = 0; i < window.CHESS_OPENINGS.length; i++) {
+	let data = window.CHESS_OPENINGS[i];
+	let op = document.createElement("div");
+	let openingName = data.eco + " " + data.name;
 	op.id = openingName.replace(/\s/g, "_");
-	op.textContent = openingName;
-	op.setAttribute("fen", fen);
-	op.setAttribute("turn", fen.indexOf(" w ") === -1 ? "b" : "w");
+	op.innerText = openingName;
+	op.setAttribute("fen", data.fen);
+	op.setAttribute("turn", data.fen.indexOf(" w ") === -1 ? "b" : "w");
 
 	op.addEventListener("click", function(e) {
 		explorerContainer.style.display = "block";
-		var old = $(".highlight")[0];
+		let old = $(".highlight")[0];
 		if(old) {
 			old.className = "";
 		}
 		this.className = "highlight";
-		var fen = this.getAttribute("fen") + " - 0 1";
+		let fen = this.getAttribute("fen") + " - 0 1";
 		getLichessExplorerData(fen, explorerMastersCheckbox.checked).then(processLichessExplorerData);
 		board.position(fen, false);
 		history.pushState(null, null, "#" + this.id);
+
+		let game = new Chess();
+		let moves = data.pgn.split(" ").map(x => x.trim());
+		for(let m = 0; m < moves.length; m++) {
+			game.move(moves[m], {sloppy:true});
+		}
+		pgnDiv.innerText = game.pgn().replace(/\. /g, ".");
 	});
 
 	list.appendChild(op);
@@ -310,41 +332,41 @@ for(fen in window.CHESS_OPENINGS) {
 
 function processLichessExplorerData(data) {
 	//Current
-	var currentGamesDiv = explorerCurrent.getElementsByClassName("explorer-current-games")[0];
-	var currentBarDiv = explorerCurrent.getElementsByClassName("explorer-bar")[0];
-	var currentTotalGames = data.white + data.draws + data.black;
+	let currentGamesDiv = explorerCurrent.getElementsByClassName("explorer-current-games")[0];
+	let currentBarDiv = explorerCurrent.getElementsByClassName("explorer-bar")[0];
+	let currentTotalGames = data.white + data.draws + data.black;
 	if(currentTotalGames === 0) {
-		currentGamesDiv.textContent = "No games found";
+		currentGamesDiv.innerText = "No games found";
 		explorerCurrent.style.border = "none";
 	} else {
- 		currentGamesDiv.textContent = currentTotalGames;
+ 		currentGamesDiv.innerText = currentTotalGames;
  		explorerCurrent.style.border = "";
 	}
 	removeLichessExplorerBar(currentBarDiv);
 	createLichessExplorerBar(currentBarDiv, data.white, data.draws, data.black, currentTotalGames);
 	//Moves
-	var moveArray = explorerMoves.getElementsByClassName("explorer-move");
-	for(var i = 0; i < moveArray.length; i++) {
-		var moveContainer = moveArray[i];
-		var moveBar = moveContainer.getElementsByClassName("explorer-bar")[0];
-		var moveName = moveContainer.getElementsByClassName("explorer-move-name")[0];
-		var moveUse = moveContainer.getElementsByClassName("explorer-move-use")[0];
+	let moveArray = explorerMoves.getElementsByClassName("explorer-move");
+	for(let i = 0; i < moveArray.length; i++) {
+		let moveContainer = moveArray[i];
+		let moveBar = moveContainer.getElementsByClassName("explorer-bar")[0];
+		let moveName = moveContainer.getElementsByClassName("explorer-move-name")[0];
+		let moveUse = moveContainer.getElementsByClassName("explorer-move-use")[0];
 		removeLichessExplorerBar(moveBar);
-		moveName.textContent = "";
-		moveUse.textContent = "";
+		moveName.innerText = "";
+		moveUse.innerText = "";
 		moveContainer.style.display = "none";
 	}
-	for(var i = 0; i < data.moves.length; i++) {
-		var moveData = data.moves[i];
-		var moveContainer = moveArray[i];
+	for(let i = 0; i < data.moves.length; i++) {
+		let moveData = data.moves[i];
+		let moveContainer = moveArray[i];
 		moveContainer.style.display = "";
-		var moveTotalGames = moveData.white + moveData.draws + moveData.black;
-		var moveBar = moveContainer.getElementsByClassName("explorer-bar")[0];
-		var moveName = moveContainer.getElementsByClassName("explorer-move-name")[0];
-		var moveUse = moveContainer.getElementsByClassName("explorer-move-use")[0];
+		let moveTotalGames = moveData.white + moveData.draws + moveData.black;
+		let moveBar = moveContainer.getElementsByClassName("explorer-bar")[0];
+		let moveName = moveContainer.getElementsByClassName("explorer-move-name")[0];
+		let moveUse = moveContainer.getElementsByClassName("explorer-move-use")[0];
 		createLichessExplorerBar(moveBar, moveData.white, moveData.draws, moveData.black, moveTotalGames);
-		moveName.textContent = moveData.san;
-		moveUse.textContent = moveTotalGames;
+		moveName.innerText = moveData.san;
+		moveUse.innerText = moveTotalGames;
 	}
 }
 
@@ -361,27 +383,27 @@ function createLichessExplorerBar(container, white, draw, black, total) {
 	}
 	container.style.display = "";
 
-	var whiteBar = document.createElement("div");
-	var drawBar = document.createElement("div");
-	var blackBar = document.createElement("div");
+	let whiteBar = document.createElement("div");
+	let drawBar = document.createElement("div");
+	let blackBar = document.createElement("div");
 
-	var whiteP = 100 * white / total;
-	var drawP = 100 * draw / total;
-	var blackP = 100 * black / total;
+	let whiteP = 100 * white / total;
+	let drawP = 100 * draw / total;
+	let blackP = 100 * black / total;
 
 	whiteBar.style.width = whiteP + "%";
 	drawBar.style.width = drawP + "%";
 	blackBar.style.width = blackP + "%";
 
-	whiteBar.textContent = Math.round(whiteP);
+	whiteBar.innerText = Math.round(whiteP);
 	if(whiteP < 8) {
 		whiteBar.style.color = "rgba(0,0,0,0)";
 	}
-	drawBar.textContent = Math.round(drawP);
+	drawBar.innerText = Math.round(drawP);
 	if(drawP < 8) {
 		drawBar.style.color = "rgba(0,0,0,0)";
 	}
-	blackBar.textContent = Math.round(blackP);
+	blackBar.innerText = Math.round(blackP);
 	if(blackP < 8) {
 		blackBar.style.color = "rgba(0,0,0,0)";
 	}
@@ -397,8 +419,8 @@ function createLichessExplorerBar(container, white, draw, black, total) {
 
 function getLichessExplorerData(fen, master) {
 	return new Promise(function(resolve, reject) {
-		var xhr = new XMLHttpRequest();
-		var url = "https://explorer.lichess.ovh/" + (master ? "master" : "lichess") +
+		let xhr = new XMLHttpRequest();
+		let url = "https://explorer.lichess.ovh/" + (master ? "master" : "lichess") +
 			"?variant=standard" +
 			"&moves=20" +
 			"&fen=" + fen +
@@ -434,8 +456,8 @@ document.addEventListener("keydown", function(e) {
 });
 
 document.getElementById("board").addEventListener("click", function(e) {
-	var turn = "w";
-	var h = $(".highlight")[0];
+	let turn = "w";
+	let h = $(".highlight")[0];
 	if(h) {
 		turn = h.getAttribute("turn");
 	}
@@ -444,10 +466,10 @@ document.getElementById("board").addEventListener("click", function(e) {
 
 document.getElementById("filter").addEventListener("keyup", function(e) {
 	e.stopPropagation(); //prevent document picking up "f" etc.
-	var openings = list.children;
-	for(var i = 0; i < list.children.length; i++) {
-		var op = list.children[i];
-		if(op.textContent.toLowerCase().indexOf(this.value.toLowerCase()) === -1) {
+	let openings = list.children;
+	for(let i = 0; i < list.children.length; i++) {
+		let op = list.children[i];
+		if(op.innerText.toLowerCase().indexOf(this.value.toLowerCase()) === -1) {
 			op.style.display = "none";
 		} else {
 			op.style.display = "";
@@ -461,7 +483,7 @@ explorerMastersCheckbox.addEventListener("change", function() {
 
 document.addEventListener("DOMContentLoaded", function(e) {
 	if(window.location.hash) {
-		var op = document.getElementById(decodeURIComponent(window.location.hash.substring(1)));
+		let op = document.getElementById(decodeURIComponent(window.location.hash.substring(1)));
 		op.click();
 	}
 });
