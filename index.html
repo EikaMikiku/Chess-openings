@@ -314,7 +314,7 @@ for(let i = 0; i < window.CHESS_OPENINGS.length; i++) {
 			old.className = "";
 		}
 		this.className = "highlight";
-		let fen = this.getAttribute("fen") + " - 0 1";
+		let fen = this.getAttribute("fen");
 		getLichessExplorerData(fen, explorerMastersCheckbox.checked).then(processLichessExplorerData);
 		board.position(fen, false);
 		history.pushState(null, null, "#" + this.id);
